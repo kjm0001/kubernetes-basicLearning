@@ -6,24 +6,23 @@ This is just a simple demonstration to get a basic understanding of how kubernet
 
 **Important :-** By seeing size of readme you might have second thoughts but to be honest if you work from start you won't experience any problem and learn along the way. 
 
-
 ## Contents
 
-1. [Requirements](#requirements)
-2. **Docker**
-   - [What is docker?](#what-is-docker)
-   - [Creating a web server](#creating-a-web-server)
-   - [Building docker image](#building-docker-image)
-   - [Getting docker images](#getting-docker-images)
-   - [Running the container image](#running-the-container-image)
-   - [Accessing your application](#accessing-your-application)
-   - [Listing all your running containers](#listing-all-your-running-containers)
-   - [Running a shell inside an existing container](#running-a-shell-inside-an-existing-container)
-      - [Exploring container from within](#exploring-container-from-within)
-   - [Stopping and removing a container](#stopping-and-removing-a-container)
-   - [Pushing the image to an image registry](#pushing-the-image-to-an-image-registry)
-      - [Pushing image to docker hub](#pushing-image-to-docker-hub)
-3. **Kubernetes**
+- [Requirements](#requirements)
+- **Docker**
+  - [What is docker?](#what-is-docker)
+  - [Creating a web server](#creating-a-web-server)
+  - [Building docker image](#building-docker-image)
+  - [Getting docker images](#getting-docker-images)
+  - [Running the container image](#running-the-container-image)
+  - [Accessing your application](#accessing-your-application)
+  - [Listing all your running containers](#listing-all-your-running-containers)
+  - [Running a shell inside an existing container](#running-a-shell-inside-an-existing-container)
+    - [Exploring container from within](#exploring-container-from-within)
+  - [Stopping and removing a container](#stopping-and-removing-a-container)
+  - [Pushing the image to an image registry](#pushing-the-image-to-an-image-registry)
+    - [Pushing image to docker hub](#pushing-image-to-docker-hub)
+-  **Kubernetes**
     - [What is Kubernetes](#what-is-kubernetes)
         - [Splitting apps into microservice](#splitting-apps-into-microservice)
         - [Scaling Microservices](#scaling-microservices)
@@ -78,6 +77,28 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [Keeping pods healthy](#keeping-pods-healthy)
             - [Introducing liveness probes](#introducing-liveness-probes)
             - [Creating an HTTP based liveness probe](#creating-an-http-based-liveness-probe)
+            - [Seeing a liveness probe in action](#seeing-a-liveness-probe-in-action)
+            - [Configuring additional properties of liveness probe](#configuring-additional-properties-of-liveness-probe)
+            - [Creating effective liveness probe](#creating-effective-liveness-probe)
+        - [Introducing ReplicationControllers](#introducing-replicationcontrollers)
+            - [The operation of a ReplicationController](#the-operation-of-a-replicationcontroller)
+            - [Introducing the controller reconciliation loop](#introducing-the-controller-reconciliation-loop)
+            - [Creating a ReplicationController](#creating-a-replicationcontroller)
+            - [Seeing the ReplicationController in action](#seeing-the-replicationcontroller-in-action)
+            - [Understanding exactly what caused the controller to create a new pod](#understanding-exactly-what-caused-the-controller-to-create-a-new-pod)
+            - [Moving pods in and out of the scope of a ReplicationController](#Moving-pods-in-and-out-of-the-scope-of-a-ReplicationController)
+            - [Changing the pod template](#changing-the-pod-template)
+            - [Horizontally scaling pods](#Horizontally-scaling-pods)
+            - [Deleting a ReplicationController](#deleting-a-replicationController)
+        - [Using ReplicaSets instead of ReplicationControllers](#using-replicasets-instead-of-replicationControllers)
+            - [Defining a ReplicaSet](#defining-a-replicaSet)
+            - [Using the ReplicaSets more expressive label selectors](#Using-the-ReplicaSets-more-expressive-label-selectors)
+        - [Running exactly one pod on each node with DaemonSets](#running-exactly-one-pod-on-each-node-with-daemonsets)
+            - [Using a DaemonSet to run a pod on every node](#using-a-daemonset-to-run-a-pod-on-every-node)
+            - [Explaning Daemon sets with an example](#explaning-daemon-sets-with-an-example)
+            - [Creating the DaemonSet](#creating-the-daemonset)
+        - [Running Pod that perform a single completable task](#running-pod-that-perform-a-single-completable-task)
+            - [Introducing the Job resource](#introducing-the-job-resource)
 
 4. [Todo](#todo)
 
@@ -245,7 +266,7 @@ As you can see, both kubia and knrt10/kubia point to the same image ID, so they�
 
 Before you can push the image to Docker Hub, you need to log in under your user ID with the **docker login** command. Once you’re logged in, you can finally push the yourid/kubia image to Docker Hub like this:
 
-`docker push knrt10/kubia`
+`docker push knrt10/kubia`     
 
 ### What is Kubernetes
 
@@ -779,7 +800,7 @@ Namespaces enable you to separate resources that don’t belong together into no
 A namespace is a Kubernetes resource like any other, so you can create it by posting a
 YAML file to the Kubernetes API server. Let’s see how to do this now. 
 
-You’re going to create a file called **custom-namespace.yml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [custom-namespace.yml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/custom-namespace.yml). The following listing shows the entire contents of the file.
+You’re going to create a file called **custom-namespace.yaml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [custom-namespace.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/custom-namespace.yaml). The following listing shows the entire contents of the file.
 
 ```yml
 apiVersion: v1
@@ -904,7 +925,7 @@ We'll now learn how Kubernetes checks if a container is still alive and restarts
 
 #### Keeping pods healthy
 
-One of the main benefits of using Kubernetes is the ability to give it a list of containers and let it keep those containers running somewhere in the cluster. You do this by creating a Pod resource and letting Kubernetes pick a worker node for it and run the pod’s containers on that node. But what if one of those containers dies?What if all containers of a pod die?
+One of the main benefits of using Kubernetes is the ability to give it a list of containers and let it keep those containers running somewhere in the cluster. You do this by creating a Pod resource and letting Kubernetes pick a worker node for it and run the pod’s containers on that node. But what if one of those containers dies? What if all containers of a pod die?
 
 As soon as a pod is scheduled to a node, the Kubelet on that node will run its containers and, from then on, keep them running as long as the pod exists. If the container’s main process crashes, the Kubelet will restart the container. If your application has a bug that causes it to crash every once in a while, Kubernetes will restart it automatically, so even without doing anything special in the app itself, running the app in Kubernetes automatically gives it the ability to heal itself.
 
@@ -918,17 +939,509 @@ For example, what about those situations when your app stops responding because 
 
 Kubernetes can check if a container is still alive through `liveness probes`. You can specify a liveness probe for each container in the pod's specification. Kubernetes can probe the container using one of three mechanisms:
 
-- An `HTTP GET` probe performs an HTTP GET request on the container's IP address, a port and path you specify. If the probe recieves a response and the response code doesn’t represent an error **(in other words, if the HTTP response code is 2xx or 3xx)**, the probe is considered successful. If the server returns an error response code or if it doesn’t respond at all, the probe is considered a failure and the container will be restarted as a result.
+- An `HTTP GET` probe performs an HTTP GET request on the container's IP address, a port and path you specify. If the probe receives a response and the response code doesn’t represent an error **(in other words, if the HTTP response code is 2xx or 3xx)**, the probe is considered successful. If the server returns an error response code or if it doesn’t respond at all, the probe is considered a failure and the container will be restarted as a result.
 
 - A `TCP Socket` probe tries to open a TCP connection to the specified port of the container. If the connection is established successfully, the probe is successful. Otherwise, the container is restarted.
 
-- An `Exec` probe executes an arbitrary command inside the container and checks the command’s exit status code. If the status code is 0, the probe is successful. All other probes are consideres as failure.
+- An `Exec` probe executes an arbitrary command inside the container and checks the command’s exit status code. If the status code is 0, the probe is successful. All other probes are considered as failure.
 
 #### Creating an HTTP based liveness probe
 
-Let's see how we can add our liveness probe to our application.
+Let’s see how to add a liveness probe to your Node.js app. Because it’s a web app, it makes sense to add a liveness probe that will check whether its web server is serving requests. But because this particular Node.js app is too simple to ever fail, you’ll need to make the app fail artificially.
 
-`kubectl get po -o wide`
+To properly demo liveness probes, you’ll modify the app slightly and make it return a `500 Internal Server Error HTTP status code` for each request after the fifth one—your app will handle the first five client requests properly and then return an error on every subsequent request. Thanks to the liveness probe, it should be restarted when that happens, allowing it to properly handle client requests again.
+
+I’ve pushed the container image to Docker Hub, so you don’t need to build it yourself. If you want you can see folder [kubia-unhealthy](https://github.com/knrt10/kubernetes-basicLearning/tree/master/kubia-unhealthy) for more information. You’ll create a new pod that includes an HTTP GET liveness probe. The following listing shows the YAML for the pod.
+
+You’re going to create a file called **kubia-liveness-probe.yaml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [kubia-liveness-probe.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/kubia-liveness-probe.yaml). The following listing shows the entire contents of the file.
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kubia-liveness
+spec:
+  containers:
+  - image: knrt10/kubia-unhealthy
+    name: kubia
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 8080
+```
+
+The pod descriptor defines an httpGet liveness probe, which tells Kubernetes to periodically perform HTTP GET requests on path / on port 8080 to determine if the container is still healthy. These requests start as soon as the container is run.
+
+After five such requests (or actual client requests), your app starts returning HTTP status `code 500`, which Kubernetes will treat as a probe failure, and will thus restart the container.
+
+#### Seeing a liveness probe in action
+
+To see what a liveness probe does, try creating a pod now. After about a minute and a half, the container will be restarted. You can see that by running `kubectl get`
+
+`kubectl get po kubia-liveness`
+
+```bash
+NAME READY STATUS RESTARTS AGE
+kubia-liveness 1/1 Running 1 2m
+```
+
+The `RESTARTS` column shows that the pod’s container has been restarted once (if you
+wait another minute and a half, it gets restarted again, and then the cycle continues
+indefinitely).
+
+You can see why the container had to be restarted by looking at what `kubectl describe` prints out. You can see that the container is currently running, but it previously terminated because of an error. The `exit code` was **137**, which has a special meaning. It denotes that the process was terminated by an external signal. The number 137 is a sum of two numbers: `128+x`, where x is the signal number sent to the process that caused it to terminate.
+
+In the example, `x equals 9`, which is the number of the `SIGKILL` signal, meaning the process was killed forcibly. When a container a killed, a completely new container is created it's not the same container being restarted again.
+
+#### Configuring additional properties of liveness probe
+
+You may have noticed that `kubectl describe` also displays additional information
+about the liveness probe:
+
+```yml
+Liveness: http-get http://:8080/ delay=0s timeout=1s period=10s #success=1
+➥ #failure=3
+```
+
+Beside the liveness probe options you specified explicitly, you can also see additional properties, such as `delay, timeout, period`, and so on. The delay=0s part shows that  the probing begins immediately after the container is started. The timeout is set to only 1 second, so the container must return a response in 1 second or the probe is counted as failed. The container is probed every 10 seconds (period=10s) and the container is restarted after the probe fails three consecutive times (#failure=3).
+
+If you don’t set the initial delay, the prober will start probing the container as soon as it starts, which usually leads to the probe failing, because the app isn’t ready to start receiving requests. If the number of failures exceeds the failure threshold, the container is restarted before it’s even able to start responding to requests properly.
+
+**TIP**:- Always remember to set an initial delay to account for your app’s startup time.
+
+I’ve seen this on many occasions and users were confused why their container was being restarted. But if they’d used `kubectl describe`, they’d have seen that the container terminated with exit code 137 or 143, telling them that the pod was terminated externally. Additionally, the listing of the pod’s events would show that the container was killed because of a failed liveness probe. If you see this happening at pod startup, it’s because you failed to set `initialDelaySeconds` appropriately.
+
+#### Creating effective liveness probe
+
+**For pods running in production**, you should always define a liveness probe. Without one, Kubernetes has no way of knowing whether your app is still alive or not. As long as the process is still running, Kubernetes will consider the container to be healthy.
+
+##### WHAT A LIVENESS PROBE SHOULD CHECK
+
+Your simplistic liveness probe simply checks if the server is responding. While this may seem overly simple, even a liveness probe like this does wonders, because it causes the container to be restarted if the web server running within the container stops responding to HTTP requests. Compared to having no liveness probe, this is a major improvement, and may be sufficient in most cases.
+
+But for a better liveness check, you’d configure the probe to perform requests on a specific URL path `(/health, for example)` and have the app perform an internal status check of all the vital components running inside the app to ensure none of them has died or is unresponsive.
+
+**TIP**:- Make sure the /health HTTP endpoint doesn’t require authentication; otherwise the probe will always fail, causing your container to be restarted indefinitely.
+
+Be sure to check only the internals of the app and nothing influenced by an external factor. For example, a frontend web server’s liveness probe shouldn’t return a failure when the server can’t connect to the backend database. If the underlying cause is in the database itself, restarting the web server container will not fix the problem. Because the liveness probe will fail again, you’ll end up with the container restarting repeatedly until the database becomes accessible again.
+
+##### KEEPING PROBES LIGHT
+
+Liveness probes shouldn’t use too many computational resources and shouldn’t take too long to complete. By default, the probes are executed relatively often and are only allowed one second to complete. Having a probe that does heavy lifting can slow down your container considerably. Later in the book, you’ll also learn about how to limit CPU time available to a container. The probe’s CPU time is counted in the container’s CPU time quota, so having a heavyweight liveness probe will reduce the CPU time available to the main application processes.
+
+##### DON’T BOTHER IMPLEMENTING RETRY LOOPS IN YOUR PROBES
+
+You’ve already seen that the failure threshold for the probe is configurable and usually the probe must fail multiple times before the container is killed. But even if you set the failure threshold to 1, Kubernetes will retry the probe several times before considering it a single failed attempt. Therefore, implementing your own retry loop into the probe is wasted effort.
+
+##### LIVENESS PROBE WRAP-UP
+
+You now understand that Kubernetes keeps your containers running by restarting them if they crash or if their liveness probes fail. This job is performed by the Kubelet on the node hosting the pod the Kubernetes Control Plane components running on the master(s) have no part in this process.
+
+But if the node itself crashes, it’s the Control Plane that must create replacements for all the pods that went down with the node. It doesn’t do that for pods that you create directly. Those pods aren’t managed by anything except by the Kubelet, but because the Kubelet runs on the node itself, it can’t do anything if the node fails.
+
+To make sure your app is restarted on another node, you need to have the pod managed by a ReplicationController or similar mechanism later on in this readme.
+
+### Introducing ReplicationControllers
+
+A Replication Controller(RC) is a Kubernetes resource that ensures its pods are always kept running. If a pod disappers for any reasons like in case of node disappearing from the cluster or because the pod was evicted from the node, the RC notes the pod missing and creates a replacement pod. Please refer to the image below
+
+![RC](https://user-images.githubusercontent.com/24803604/70711851-6c2c2e00-1d08-11ea-90cd-1feba139645d.png)
+
+> When a node fails, only pods backed by a ReplicationController are recreated.
+
+The RC in the figure only manage only a single pod but in general they are meant to create and manage a mutiple copies (replicas) of a pod. That's where RC got their name from.
+
+#### The operation of a ReplicationController
+
+The RC contantly monitors the list of running pods and makes sure the actual number of pods of a "type" always matches the desires number. If too few such pods are running, it creates new replica from pod template. If too much pods are running, it remove the excess replicas.
+
+You might be wondering how there can be more than the desired number of replicas. This can happen for a few reasons:
+
+- Someone creates a pod of the same type manually.
+- Someone changes an existing pod’s “type.”
+- Someone decreases the desired number of pods, and so on.
+
+I’ve used the term pod “type” a few times. But no such thing exists. Replication Controllers don’t operate on pod types, but on sets of pods that match a certain label selector, which I have told you previously.
+
+#### Introducing the controller reconciliation loop
+
+A ReplicationController’s job is to make sure that an exact number of pods always matches its label selector. If it doesn’t, the ReplicationController takes the appropriate action to reconcile the actual with the desired number.
+
+![controller-reconcilition-loop](https://user-images.githubusercontent.com/24803604/70713322-c5e22780-1d0b-11ea-9334-3d9213e86d3c.png)
+
+A ReplicationController has three essential parts:
+
+- A label selector, which determines what pods are in the ReplicationController’s scope
+- A replica count, which specifies the desired number of pods that should be running
+- A pod template, which is used when creating new pod replicas
+
+![RC three parts](https://user-images.githubusercontent.com/24803604/70715546-8964fa80-1d10-11ea-8e33-59f1a5a36698.png)
+
+> The three key parts of a
+ReplicationController (pod selector,
+replica count, and pod template)
+
+A ReplicationController’s replica count, the label selector, and even the pod template can all be modified at any time, but only changes to the replica count affect existing pods.
+
+Changes to the label selector and the pod template have no effect on existing pods. Changing the label selector makes the existing pods fall out of the scope of the ReplicationController, so the controller stops caring about them. ReplicationControllers also don’t care about the actual “contents” of its pods (the container images, environment variables, and other things) after they create the pod. The template therefore only affects new pods created by this ReplicationController. You can think of it as a cookie cutter for cutting out new pods.
+
+**BENEFITS**
+
+- It makes sure a pod (or multiple pod replicas) is always running by starting a
+new pod when an existing one goes missing.
+- When a cluster node fails, it creates replacement replicas for all the pods that
+were running on the failed node (those that were under the Replication-
+Controller’s control).
+- It enables easy horizontal scaling of pods—both manual and automatic
+
+**Note**:- A pod instance is never relocated to another node. Instead, the ReplicationController creates a completely new pod instance that has no relation to the instance it’s replacing.
+
+#### Creating a ReplicationController
+
+You’re going to create a file called **kubia-rc.yaml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [kubia-rc.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/kubia-rc.yaml). The following listing shows the entire contents of the file.
+
+```yaml
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: kubia
+spec:
+  replicas: 3
+  selector:
+    app: kubia
+  template:
+    metadata:
+      labels:
+        app: kubia
+    spec:
+      containers:
+      - name: kubia
+        image: knrt10/kubia
+        ports:
+        - containerPort: 8080
+```
+
+When you post the file to the API server, Kubernetes creates a new ReplicationController named `kubia`, which makes sure three pod instances always match the label selector `app=kubia`. When there aren’t enough pods, new pods will be created from the provided pod template. The contents of the template are almost identical to pod defination we created before.
+
+The pod labels in the template must obviously match the label selector of the ReplicationController; otherwise the controller would create new pods indefinitely, because spinning up a new pod wouldn’t bring the actual replica count any closer to the desired number of replicas. To prevent such scenarios, the API server verifies the ReplicationController definition and will not accept it if it’s misconfigured.
+
+Not specifying the selector at all is also an option. In that case, it will be configured automatically from the labels in the pod template.
+
+To create the ReplicationController, use the `kubectl create` command, which you already know:
+
+`kubectl create -f kubia-rc.yaml`
+> replicationcontroller "kubia" created
+
+#### Seeing the ReplicationController in action
+
+Because no pods exist with the `app=kubia` label, the ReplicationController should spin up three new pods from the pod template. List the pods to see if the ReplicationController has done what it’s supposed to:
+
+`kubectl get po`
+
+```bash
+NAME          READY   STATUS              RESTARTS   AGE
+kubia-53thy   0/1     ContainerCreating   0          6s
+kubia-k0xz6   0/1     ContainerCreating   0          6s
+kubia-q3vkg   0/1     ContainerCreating   0          6s
+```
+
+Indeed, it has! We wanted three pods, and it created three pods. It’s now managing those three pods. Next we'll mess with them a little to see how the ReplicationController responds. Now try deleting a pod, the RC will spawn another pod automatically. The ReplicationController has done its job again. It’s a nice little helper, isn’t it?
+
+#### Understanding exactly what caused the controller to create a new pod
+
+The controller is responding to the deletion of a pod by creating a new replacement pod as we did above. Well, technically, it isn’t responding to the deletion itself, but the resulting state—the inadequate number of pods. 
+
+While a ReplicationController is immediately notified about a pod being deleted (the API server allows clients to watch for changes to resources and resource lists), that’s not what causes it to create a replacement pod. The notification triggers the controller to check the actual number of pods and take appropriate action.
+
+![pod-deleting-info](https://user-images.githubusercontent.com/24803604/71673599-d2700380-2d3e-11ea-92c6-fc36300db222.png)
+
+> If a pod disappears, the ReplicationController sees too few pods and creates a new replacement pod.
+
+Seeing the ReplicationController respond to the manual deletion of a pod isn’t too interesting, so let’s look at a better example. If you’re using Google Kubernetes Engine to run these examples, you have a three-node Kubernetes cluster. You’re going to disconnect one of the nodes from the network to simulate a node failure.
+
+**Note**:- If you’re using Minikube, you can’t do this exercise, because you only have one node that acts both as a master and a worker node.
+
+If a node fails in the non-Kubernetes world, the ops team would need to migrate the applications running on that node to other machines manually. Kubernetes, on the other hand, does that automatically. Soon after the ReplicationController detects that its pods are down, it will spin up new pods to replace them.
+
+Let’s see this in action. You need to ssh into one of the nodes with the `gcloud compute ssh` command and then shut down its network interface with `sudo ifconfig eth0 down`, as shown in the following below.
+
+```bash
+gcloud compute ssh gke-kubia-default-pool-b46381f1-zwko`
+
+Enter passphrase for key '/home/knrt10/.ssh/google_compute_engine':
+Welcome to Kubernetes v1.16.2!
+```
+
+...
+
+```bash
+knrt10@gke-kubia-default-pool-b46381f1-zwko ~ $ sudo ifconfig eth0 down
+```
+
+When you shut down the network interface, the ssh session will stop responding, so you need to open up another terminal or hard-exit from the ssh session. In the new terminal you can list the nodes to see if Kubernetes has detected that the node is down. This takes a minute or so. Then, the node’s status is shown as `NotReady`:
+
+![GCE node info](https://user-images.githubusercontent.com/24803604/71674165-27604980-2d40-11ea-9f4e-4aa27b148ff5.png)
+
+If you list the pods now, you’ll still see the same three pods as before, because Kubernetes waits a while before rescheduling pods (in case the node is unreachable because of a temporary network glitch or because the Kubelet is restarting). If the node stays unreachable for several minutes, the status of the pods that were scheduled to that node changes to `Unknown`. At that point, the ReplicationController will immediately spin up a new pod. You can see this by listing the pods again:
+
+![GCE pod info](https://user-images.githubusercontent.com/24803604/71674301-75754d00-2d40-11ea-8d5b-c27598eb55a5.png)
+
+Looking at the age of the pods, you see that the kubia-dmdck pod is new. You again have three pod instances running, which means the ReplicationController has again done its job of bringing the actual state of the system to the desired state.
+
+The same thing happens if a node fails (either breaks down or becomes unreachable). No immediate human intervention is necessary. The system heals itself automatically. To bring the node back, you need to reset it with the following command:
+
+`gcloud compute instances reset gke-kubia-default-pool-b46381f1-zwko`
+
+When the node boots up again, its status should return to `Ready`, and the pod whose status was `Unknown` will be deleted.
+
+#### Moving pods in and out of the scope of a ReplicationController
+
+Pods created by a ReplicationController aren’t tied to the ReplicationController in any way. At any moment, a ReplicationController manages pods that match its label selector. By changing a pod’s labels, it can be removed from or added to the scope of a ReplicationController. It can even be moved from one ReplicationController to another.
+
+**TIP**:- Although a pod isn’t tied to a ReplicationController, the pod does reference it in the `metadata.ownerReferences` field, which you can use to easily find which ReplicationController a pod belongs to.
+
+If you change a pod’s labels so they no longer match a ReplicationController’s label selector, the pod becomes like any other manually created pod. It’s no longer managed by anything. If the node running the pod fails, the pod is obviously not rescheduled. But keep in mind that when you changed the pod’s labels, the replication controller noticed one pod was missing and spun up a new pod to replace it.
+
+`kubectl label po kubia-dmdck app=kubia2 --overwrite`
+
+The --overwrite argument is necessary; otherwise kubectl will only print out a warning and won’t change the label, to prevent you from inadvertently changing an existing label’s value when your intent is to add a new one. There, you now have four pods altogether: one that isn’t managed by your ReplicationController and three that are. Among them is the newly created pod.
+
+![RC pod relabelling](https://user-images.githubusercontent.com/24803604/71676804-c38d4f00-2d46-11ea-83fc-ad635ad2ae3a.png)
+
+> Removing a pod from the scope of a ReplicationController by changing its labels
+
+ReplicationController spins up pod kubia-2qneh to bring the number back up to three. Pod kubia-dmdck is now completely independent and will keep running until you delete it manually (you can do that now, because you don’t need it anymore).
+
+**REMOVING PODS FROM CONTROLLERS IN PRACTICE**
+
+Removing a pod from the scope of the ReplicationController comes in handy when you want to perform actions on a specific pod. For example, you might have a bug that causes your pod to start behaving badly after a specific amount of time or a specific event. If you know a pod is malfunctioning, you can take it out of the ReplicationController’s scope, let the controller replace it with a new one, and then debug or play with the pod in any way you want. Once you’re done, you delete the pod.
+
+#### Changing the pod template
+
+A ReplicationController’s pod template can be modified at any time. Changing the pod template is like replacing a cookie cutter with another one. It will only affect the cookies you cut out afterward and will have no effect on the ones you’ve already cut (see figure below). To modify the old pods, you’d need to delete them and let the Replication- Controller replace them with new ones based on the new template.
+
+![pod template change](https://user-images.githubusercontent.com/24803604/71677160-b3c23a80-2d47-11ea-9773-3985f1cfc15e.png)
+
+> Changing a ReplicationController’s pod template only affects pods created afterward and has no effect on existing pods.
+
+As an exercise, you can try editing the ReplicationController and adding a label to the pod template. You can edit the ReplicationController with the following command:
+
+`kubectl edit rc kubia`
+
+This will open the ReplicationController’s YAML definition in your default text editor. Find the pod template section and add an additional label to the metadata. After you save your changes and exit the editor, kubectl will update the ReplicationController and print the following message:
+
+`replicationcontroller "kubia" edited`
+
+You can now list pods and their labels again and confirm that they haven’t changed. But if you delete the pods and wait for their replacements to be created, you’ll see the new label.
+
+Editing a ReplicationController like this to change the container image in the pod template, deleting the existing pods, and letting them be replaced with new ones from the new template could be used for upgrading pods, but you’ll learn a better way of doing it later.
+
+#### Horizontally scaling pods
+
+Scaling the number of pods up or down is as easy as changing the value of the replicas field in the ReplicationController resource. After the change, the ReplicationController will either see too many pods exist (when scaling down) and delete part of them, or see too few of them (when scaling up) and create additional pods. You already know the command below
+
+`kubectl scale rc kubia --replicas=10`
+
+but instead of using the `kubectl scale` command, you’re going to scale it in a declarative way by editing the ReplicationController’s definition: 
+
+`kubectl edit rc kubia`
+
+When the text editor opens, find the spec.replicas field and change its value to 10. Now check your listing.
+
+```bash
+kubectl get rc
+
+NAME DESIRED CURRENT READY AGE
+kubia 10      10      4     21m
+```
+
+Now scale back down to 3. You can use the kubectl scale command:
+
+`kubectl scale rc kubia --replicas=3`
+
+Horizontally scaling pods in Kubernetes is a matter of stating your desire: "I want to have x number of instances running." You’re not telling Kubernetes what or how to do it. You’re just specifying the desired state.
+
+This declarative approach makes interacting with a Kubernetes cluster easy. Imagine if you had to manually determine the current number of running instances and then explicitly tell Kubernetes how many additional instances to run. That’s more work and is much more error-prone. Changing a simple number is much easier and later, you’ll learn that even that can be done by Kubernetes itself if you enable horizontal pod auto-scaling.
+
+#### Deleting a ReplicationController
+
+When you delete a ReplicationController through kubectl delete, the pods are also deleted. But because pods created by a ReplicationController aren’t an integral part of the ReplicationController, and are only managed by it, you can delete only the ReplicationController and leave the pods running, as shown below
+
+![deleing-RC](https://user-images.githubusercontent.com/24803604/71678495-ec174800-2d4a-11ea-909f-e87fd2f33bdf.png)
+
+This may be useful when you initially have a set of pods managed by a ReplicationController, and then decide to replace the ReplicationController with a `ReplicaSet`. You can do this without affecting the pods and keep them running without interruption while you replace the ReplicationController that manages them.
+
+When deleting a ReplicationController with kubectl delete, you can keep its pods running by passing the `--cascade=false` option to the command. Try that now:
+
+`kubectl delete rc kubia --cascade=false`
+
+You’ve deleted the ReplicationController so the pods are on their own. They are no longer managed. But you can always create a new ReplicationController with the proper label selector and make them managed again.
+
+### Using ReplicaSets instead of ReplicationControllers
+
+Initially, ReplicationControllers were the only Kubernetes component for replicating pods and rescheduling them when nodes failed. Later, a similar resource called a ReplicaSet was introduced. It’s a new generation of ReplicationController and replaces it completely (ReplicationControllers will eventually be deprecated).
+
+We could have started this section by creating a ReplicaSet instead of a ReplicationController, but I felt it would be a good idea to start with what was initially available in Kubernetes **(Please Don't report me :wink:)**. Plus, we'll still see ReplicationControllers used in the wild, so it’s good for you to know about them. That said, you should always create ReplicaSets instead of ReplicationControllers from now on. They’re almost identical, so you shouldn’t have any trouble using them instead.
+
+A ReplicaSet behaves exactly like a ReplicationController, but it has more expressive pod selectors. Whereas a ReplicationController’s label selector only allows matching pods that include a certain label, a ReplicaSet’s selector also allows matching pods that lack a certain label or pods that include a certain label key, regardless of its value.
+
+Also, for example, a single ReplicationController can’t match pods with the label `env=production` and those with the label `env=devel` at the same time. It can only match either pods with the env=production label or pods with the env=devel label. But a single ReplicaSet can match both sets of pods and treat them as a single group.
+
+Similarly, a ReplicationController can’t match pods based merely on the presence of a label key, regardless of its value, whereas a ReplicaSet can. For example, a ReplicaSet can match all pods that include a label with the key env, whatever its actual value is(you can think of it as env=*).
+
+#### Defining a ReplicaSet
+
+You’re going to create a ReplicaSet now to see how the orphaned pods that were created by your ReplicationController and then abandoned earlier can now be adopted by a ReplicaSet. 
+
+You’re going to create a file called **kubia-replicaset.yaml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [kubia-replicaset.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/kubia-replicaset.yaml). The following listing shows the entire contents of the file.
+
+```yml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: kubia
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kubia
+  template:
+    metadata:
+      labels:
+        app: kubia
+    spec:
+      containers:
+      - name: kubia
+        image: knrt10/kubia
+        ports:
+        - containerPort: 8080
+```
+
+The first thing to note is that ReplicaSets aren’t part of the v1 API, so you need to ensure you specify the proper apiVersion when creating the resource. You’re creating a resource of type ReplicaSet which has much the same contents as the ReplicationController you created earlier.
+
+The only difference is in the selector. Instead of listing labels the pods need to have directly under the selector property, you’re specifying them under selector `matchLabels`. This is the simpler (and less expressive) way of defining label selectors in a ReplicaSet. Because you still have three pods matching the app=kubia selector running from earlier, creating this ReplicaSet will not cause any new pods to be created. The ReplicaSet will take those existing three pods under its wing. You can create ReplicaSet using `kubectl create` command. Then examine using `kubectl describe` command. 
+
+As you can see, the ReplicaSet isn’t any different from a ReplicationController. It’s showing it has three replicas matching the selector. If you list all the pods, you’ll see they’re still the same three pods you had before. The ReplicaSet didn’t create any new ones.
+
+#### Using the ReplicaSets more expressive label selectors
+
+The main improvements of ReplicaSets over ReplicationControllers are their more expressive label selectors. You intentionally used the simpler matchLabels selector in the first ReplicaSet example to see that ReplicaSets are no different from ReplicationControllers. 
+
+You can add additional expressions to the selector. As in the example, each expression must contain a key, an operator, and possibly (depending on the operator) a list of values. You’ll see four valid operators:
+
+- `In`—Label’s value must match one of the specified values.
+- `NotIn`—Label’s value must not match any of the specified values.
+- `Exists`—Pod must include a label with the specified key (the value isn’t important).
+When using this operator, you shouldn’t specify the values field.
+- `DoesNotExist`—Pod must not include a label with the specified key. The values
+property must not be specified.
+
+If you specify multiple expressions, all those expressions must evaluate to true for the selector to match a pod. If you specify both matchLabels and matchExpressions, all the labels must match and all the expressions must evaluate to true for the pod to match the selector.
+
+This was a quick introduction to ReplicaSets as an alternative to ReplicationControllers. Remember, always use them instead of ReplicationControllers, but you may still find ReplicationControllers in other people’s deployments.
+
+Now, delete the ReplicaSet to clean up your cluster a little. You can delete the ReplicaSet the same way you’d delete a ReplicationController:
+
+`kubectl delete rs kubia`
+> replicaset "kubia" deleted
+
+Deleting the ReplicaSet should delete all the pods. List the pods to confirm that’s the case.
+
+### Running exactly one pod on each node with DaemonSets
+
+Both RC and RS are used for running specifics number of pods deployed anywhere in Kubernetes cluster. But certain cases exist when you want a pod to run on each and every node in the cluster (and each node needs to run exactly one instance of the pod). Those cases include infrastructure related pods that perform system-level operations.
+
+For example, you’ll want to run a log collector and a resource monitor on every node. Another good example is Kubernetes’ own kube-proxy process, which needs to run on all nodes to make services work.
+
+![Daemon Sets](https://user-images.githubusercontent.com/24803604/71682868-9183e900-2d56-11ea-9cab-e645ef0564b1.png)
+
+> DaemonSets run only a single pod replica on each node, whereas ReplicaSets scatter them around the whole cluster randomly.
+
+#### Using a DaemonSet to run a pod on every node
+
+To run a pod on all cluster nodes, you create a DaemonSet object, which is much like a ReplicationController or a ReplicaSet, except that pods created by a DaemonSet already have a target node specified and skip the Kubernetes Scheduler. They aren’t scattered around the cluster randomly.
+
+A DaemonSet makes sure it creates as many pods as there are nodes and deploys each one on its own node, as shown above. Whereas a ReplicaSet (or ReplicationController) makes sure that a desired number of pod replicas exist in the cluster, a DaemonSet doesn’t have any notion of a desired replica count. It doesn’t need it because its job is to ensure that a pod matching its pod selector is running on each node.
+
+If a node goes down, the DaemonSet doesn’t cause the pod to be created elsewhere. But when a new node is added to the cluster, the DaemonSet immediately deploys a new pod instance to it. It also does the same if someone inadvertently deletes one of the pods, leaving the node without the DaemonSet’s pod. Like a ReplicaSet, a DaemonSet creates the pod from the pod template configured in it.
+
+#### Explaning Daemon sets with an example
+
+Let’s imagine having a daemon called `ssd-monitor` that needs to run on all nodes that contain a solid-state drive (SSD). You’ll create a DaemonSet that runs this daemon on all nodes that are marked as having an SSD. The cluster administrators have added the `disk=ssd` label to all such nodes, so you’ll create the DaemonSet with a node selector that only selects nodes with that label,
+
+![creating daemon sets](https://user-images.githubusercontent.com/24803604/71683593-9c3f7d80-2d58-11ea-94a0-ffc9c3cd4071.png)
+
+You’ll create a DaemonSet that runs a mock ssd-monitor process, which prints "SSD OK" to the standard output every five seconds. I’ve already prepared the mock container image and pushed it to Docker Hub, so you can use it instead of building your own. 
+
+You’re going to create a file called **ssd-monitor-daemonset.yaml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [ssd-monitor-daemonset.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/ssd-monitor-daemonset.yaml). The following listing shows the entire contents of the file.
+
+```yml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ssd-monitor
+spec:
+  selector:
+    matchLabels:
+      app: ssd-monitor
+  template:
+    metadata:
+      labels:
+        app: ssd-monitor
+    spec:
+      nodeSelector:
+        disk: ssd
+      containers:
+      - name: main
+        image: knrt10/ssd-monitor
+```
+
+You’re defining a DaemonSet that will run a pod with a single container based on the `knrt10/ssd-monitor` container image. An instance of this pod will be created for each node that has the `disk=ssd` label.
+
+#### Creating the DaemonSet
+
+Use `kubectl create` command as you know.
+
+`kubectl create -f ssd-monitor-daemonset.yaml`
+
+Let’s see the created DaemonSet:
+
+`kubectl get ds`
+
+```bash
+NAME          DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+ssd-monitor   0         0         0       0            0           disk=ssd        18s
+```
+
+Those zeroes look strange. Didn’t the DaemonSet deploy any pods? List the pods:
+
+`kubectl get po`
+> No resources found.
+
+Where are the pods? Do you know what’s going on? Yes, you forgot to label your nodes with the disk=ssd label. No problem—you can do that now. The DaemonSet should detect that the nodes’ labels have changed and deploy the pod to all nodes with a matching label. Let’s see if that’s true. The DaemonSet should have created one pod now. Let’s see:
+
+`kubectl label node minikube disk=ssd`
+
+```bash
+NAME                READY   STATUS    RESTARTS   AGE
+ssd-monitor-zs6sr   1/1     Running   0          6s
+```
+
+Okay; so far so good. If you have multiple nodes and you add the same label to further nodes, you’ll see the DaemonSet spin up pods for each of them. Now, imagine you’ve made a mistake and have mislabeled one of the nodes. It has a spinning disk drive, not an SSD. What happens if you change the node’s label?
+
+The pod is being terminated. But you knew that was going to happen, right? This wraps up your exploration of DaemonSets, so you may want to delete your ssd-monitor DaemonSet. If you still have any other daemon pods running, you’ll see that deleting the DaemonSet deletes those pods as well.
+
+### Running Pod that perform a single completable task
+
+So far, I have told about the pods that run continuously. We'll have cases that need to terminate once the task is completed. ReplicationContollers, RelicaSets, DaemonSets run continuously task that are never considered completed. Process in these tasks are restarted when they exit, but we do not want that. We want to stop once the process is completed. 
+
+#### Introducing the Job resource
+
+Kubernetes includes support for this through Job resource, which is similar to other resources we have discussed so far, but it allows you to run a pod whose container isn’t restarted when the process running inside finishes successfully. Once it does, the pod is considered complete.
+
+In the event of node failure, pod on that node that are managed by the Job will be reschduled to other nodes the way ReplicaSets are. In the event of a failure of the process itself (when the process returns an error exit code), the Job can be configured to either restart the container or not.
+
+As shown below, it tells how a pod created by a Job is rescheduled to a new node if the node it was initially scheduled to fails. It also shows both a managed pod, which isn’t rescheduled, and a pod backed by a ReplicaSet, which is.
 
 ## Todo
 
